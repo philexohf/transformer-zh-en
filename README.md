@@ -3,12 +3,11 @@
 纯手写实现 Transformer 论文《Attention Is All You Need》，用于中英机器翻译。
 在 4070 Ti 上训练 11 epoch，100 万句对，BLEU 达 36.87。
 
- **持续更新中， 点个 Star ⭐ 收藏，更新不错过。**
+------
 
-| 仓库 | 地址 | 说明 |
-|------|------|------|
-| GitHub | https://github.com/philexohf/transformer-zh-en | 主仓库 |
-| Gitee  | https://gitee.com/philexohf/transformer-zh-en | 镜像同步 |
+ **新项目发布：GleamLM——面向教育和研究的小型语言模型。https://github.com/philexohf/gleamlm**
+
+------
 
 ## 项目特性
 
