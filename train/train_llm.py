@@ -264,6 +264,8 @@ def main():
             model.module.load_state_dict(checkpoint['model_state_dict'])
         else:
             model.load_state_dict(checkpoint['model_state_dict'])
+        if 'optimizer_state_dict' in checkpoint:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         if 'scaler_state_dict' in checkpoint:
             scaler.load_state_dict(checkpoint['scaler_state_dict'])
         if 'scheduler_state_dict' in checkpoint:
