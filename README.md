@@ -262,7 +262,7 @@ tensorboard --logdir checkpoints/runs
 ```
 Transformer_zh_en2026/
 ├── core/                        # 核心库（借鉴 GleamLM 包组织：配置/分词/数据/模型）
-│   ├── __init__.py              #   统一导出（含 build_model 与旧 checkpoint 的 pickle 兼容）
+│   ├── __init__.py              #   统一导出（含 build_model）
 │   ├── config.py                # 配置参数（含显存适配指南）
 │   ├── tokenizer.py             # 统一 BPE 分词器
 │   ├── dataset.py               # 数据集（TranslationDataset + collate_fn）
