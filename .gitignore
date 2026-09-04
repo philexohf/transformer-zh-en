@@ -18,7 +18,6 @@ data/wmt_processed/valid.*
 checkpoints/best_model.pt
 checkpoints/model_fp16.pt
 checkpoints/checkpoint_*.pt
-translation_infer/checkpoints/model_fp16.pt
 
 # TensorBoard 日志
 checkpoints/runs/
