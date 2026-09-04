@@ -96,6 +96,11 @@ python train/train_llm.py \
   --d_ff 1536
 ```
 
+```bash
+# 断点续训：自动恢复模型 / 优化器 / AMP / 调度器状态，从断点 epoch 继续
+python train/train_llm.py --load_checkpoint checkpoints/best_model.pt
+```
+
 训练过程（12GB 单卡实测）：约 28 it/s、单 epoch 约 18 分钟，11 epoch 总耗时约 3 小时；
 train_loss 2.64 → val_loss 2.70；最佳模型自动保存至 `checkpoints/best_model.pt`。
 
@@ -210,7 +215,7 @@ FP16 模型的交互式/单句推理用法与 FP32 相同（见上节推理命�
 | accumulate_grad | 1 | 梯度累积步数 |
 | epochs | 11 | 目标训练轮数 |
 | warmup_steps | 4000 | 学习率预热步数 |
-| lr_multiplier | 0.5 | 学习率乘数（余弦退火） |
+| lr_multiplier | 0.5 | 学习率乘数（两训练脚本通用，0.5 为小 batch 推荐值） |
 | label_smoothing | 0.1 | 标签平滑 |
 | clip_grad | 1.0 | 梯度裁剪阈值 |
 
@@ -292,6 +297,8 @@ Transformer_zh_en2026/
 |------|------|--------|---------|---------|
 | `train/train_llm.py`（推荐） | AMP 混合精度 | AdamW（wd=0.01） | CosineAnnealing + Warmup | 消费级 GPU 优化 |
 | `train/train_2017.py`（参考） | FP32 | Adam | `d^-0.5 · min(step^-0.5, step · warmup^-1.5)` | 论文复现 |
+
+两个脚本均支持 `--load_checkpoint` 断点续训；存档互不覆盖（2017 版带 `_2017` 后缀）。
 
 ### 4. 推理与解码
 
