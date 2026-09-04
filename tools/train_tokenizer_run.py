@@ -1,7 +1,7 @@
 import argparse
 import os
 import sys
-# Ensure project root is on sys.path when running from scripts/
+# Ensure project root is on sys.path when running from tools/
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from core.tokenizer import UnifiedBPETokenizer
 

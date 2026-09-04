@@ -280,19 +280,17 @@ Transformer_zh_en2026/
 ├── eval/                        # 评测轨
 │   └── evaluate_bleu.py         # BLEU 评估脚本
 │
-├── tools/                       # 数据工具
+├── tools/                       # 项目工具（数据准备 / 分词器 / 生成演示 / 配置）
 │   ├── preprocess_pipeline.py   # 数据预处理流水线
-│   ├── train_tokenizer.py       # 训练 SentencePiece BPE 分词器
 │   ├── process_wmt.py           # WMT 原始 CSV → 清洗文本
 │   ├── process_subset.py        # 子集数据预处理（去中文空格等）
-│   └── tokenize_text.py         # 分词演示与交互工具
-│
-├── scripts/                     # 生成演示（贪心 / Beam / Sampling）
-│   ├── generate_samples.py
-│   ├── generate_beam.py
-│   ├── generate_sampling.py
-│   └── train_tokenizer_run.py   # 分词器训练入口
-│
+│   ├── tokenize_text.py         # 分词演示与交互工具
+│   ├── train_tokenizer_run.py   # 分词器训练入口
+│   ├── generate_samples.py      # 贪心解码批量生成
+│   ├── generate_beam.py         # Beam Search 批量生成
+│   ├── generate_sampling.py     # 采样批量生成（temperature / top-k）
+│   ├── print_config.py          # 打印默认超参
+│   └── README.md                # 工具使用说明
 ├── archive/                     # 历史训练诊断脚本（已退役，仅供回溯）
 ├── tests/                       # pytest 单元测试（运行: python -m pytest tests -v）
 ├── checkpoints/                 # 模型权重与 BPE 产物（权重不入仓库）
@@ -344,8 +342,8 @@ Transformer_zh_en2026/
 | 策略 | 文件 | 算法要点 |
 |------|------|---------|
 | Greedy | `inference/infer.py` / `inference/infer_quantized.py` | 每步 `argmax`，到 `eos` 停止 |
-| Beam Search | `inference/infer.py` / `scripts/generate_beam.py` | 宽度 5 + length penalty α=0.6 + n-gram 去重 |
-| Sampling | `scripts/generate_sampling.py` | Temperature / top-k / n-gram 回退到 argmax |
+| Beam Search | `inference/infer.py` / `tools/generate_beam.py` | 宽度 5 + length penalty α=0.6 + n-gram 去重 |
+| Sampling | `tools/generate_sampling.py` | Temperature / top-k / n-gram 回退到 argmax |
 
 ### 5. 量化导出（inference/quantize.py）
 
@@ -358,7 +356,7 @@ Transformer_zh_en2026/
 ```
 CSV(6.3GB) → tools/process_wmt.py → 2473万句对
   → sample → 100万 train + 10万 valid
-    → tools/train_tokenizer.py → 32K BPE 词表
+    → tools/train_tokenizer_run.py → 32K BPE 词表
 ```
 
 ## 参考
