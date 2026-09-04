@@ -5,10 +5,6 @@
 
 ------
 
- **新项目发布：GleamLM——面向教育和研究的小型语言模型。https://github.com/philexohf/gleamlm**
-
-------
-
 ## 项目特性
 
 - **纯手写 Transformer** — 多头注意力、位置编码、掩码机制全部手写，不依赖 `nn.Transformer`
@@ -25,7 +21,7 @@
 | Python | 3.12 | |
 | PyTorch | 2.5.1+cu124 | AMP 混合精度训练 |
 | CUDA | 12.4 | GPU 训练 |
-| GPU | RTX 4070 Ti (12GB) | 实测约 28 it/s |
+| GPU | NVIDIA (12GB) | 实测约 28 it/s |
 
 ```bash
 # 推荐使用 conda 环境
