@@ -5,6 +5,8 @@ Transformer 训练脚本（论文原版实现）
 train/train_llm.py 提供了更好的性能：AMP混合精度 + CosineLR学习率调度 + AdamW优化器
 
 用法: python train/train_2017.py
+       python train/train_2017.py --lr_multiplier 0.5   # 小 batch 下调低峰值 LR
+存档: best_model_2017.pt / checkpoint_epoch_<n>_2017.pt（与 train_llm.py 分开，避免覆盖）
 """
 
 import torch
@@ -54,14 +56,17 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 
-def get_lr(step, d_model, warmup_steps):
+def get_lr(step, d_model, warmup_steps, lr_multiplier=1.0):
     """
     论文原版学习率调度公式：
-    lr = d_model^(-0.5) * min(step^(-0.5), step * warmup_steps^(-1.5))
+    lr = lr_multiplier * d_model^(-0.5) * min(step^(-0.5), step * warmup_steps^(-1.5))
+
+    lr_multiplier: 论文原版为 1.0；小 batch（本项目有效 batch 约 2500 token）
+    下峰值 LR 8e-4 可能偏大，建议 0.5（与 train_llm.py 的推荐一致）。
     """
     step = max(1, step)
     base_lr = d_model ** (-0.5) * min(step ** (-0.5), step * warmup_steps ** (-1.5))
-    return base_lr
+    return lr_multiplier * base_lr
 
 
 def train_one_epoch(model, train_loader, optimizer, scheduler, criterion, device, epoch, args, global_step, writer):
@@ -231,10 +236,10 @@ def main():
         eps=1e-9
     )
 
-    # 学习率调度（论文原版 Warmup）
+    # 学习率调度（论文原版 Warmup + lr_multiplier 可选缩放）
     scheduler = torch.optim.lr_scheduler.LambdaLR(
         optimizer,
-        lambda step: get_lr(step, args.d_model, args.warmup_steps)
+        lambda step: get_lr(step, args.d_model, args.warmup_steps, args.lr_multiplier)
     )
 
     # 断点续训
@@ -247,8 +252,10 @@ def main():
             model.module.load_state_dict(checkpoint['model_state_dict'])
         else:
             model.load_state_dict(checkpoint['model_state_dict'])
-        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+        if 'optimizer_state_dict' in checkpoint:
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        if 'scheduler_state_dict' in checkpoint:
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         start_epoch = checkpoint['epoch'] + 1
     
     # 创建检查点目录
@@ -303,7 +310,7 @@ def main():
                     'val_loss': val_loss,
                     'tokenizer': tokenizer,
                     'args': args
-                }, os.path.join(args.checkpoint_dir, "best_model.pt"))
+                }, os.path.join(args.checkpoint_dir, "best_model_2017.pt"))
                 print(f"Saved best model with val_loss={val_loss:.4f}")
             
             if (epoch + 1) % 5 == 0:
@@ -312,7 +319,7 @@ def main():
                     'model_state_dict': model.module.state_dict() if args.world_size > 1 else model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                     'scheduler_state_dict': scheduler.state_dict(),
-                }, os.path.join(args.checkpoint_dir, f"checkpoint_epoch_{epoch}.pt"))
+                }, os.path.join(args.checkpoint_dir, f"checkpoint_epoch_{epoch}_2017.pt"))
     
     if args.world_size > 1:
         dist.destroy_process_group()
