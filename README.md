@@ -1,16 +1,14 @@
 # Transformer 中英机器翻译
 
 纯手写实现 Transformer 论文《Attention Is All You Need》，用于中英机器翻译。
-在 4070 Ti 上训练 11 epoch，100 万句对，BLEU 达 36.87。
-
-------
+在 12GB 显存单卡上训练 11 epoch（100 万句对），BLEU 达 36.87。
 
 ## 项目特性
 
 - **纯手写 Transformer** — 多头注意力、位置编码、掩码机制全部手写，不依赖 `nn.Transformer`
 - **统一 BPE 分词** — 中英文共享 32K 词表，SentencePiece 训练（100 万句对）
-- **AMP 混合精度** — 自动混合精度训练，4070 Ti 上约 28 it/s
-- **余弦退火 + Warmup** — 稳定收敛，11 epoch 达到 BLEU 36.87
+- **AMP 混合精度** — 自动混合精度训练
+- **余弦退火 + Warmup** — 稳定收敛
 - **DDP 多卡支持** — 多卡并行训练
 - **完整流水线** — CSV 清洗 → 数据采样 → 分词器训练 → 模型训练 → BLEU 评估
 
@@ -50,37 +48,31 @@ python tools/process_wmt.py \
 
 输出：`data/wmt_processed/wmt_zh_en_training_corpus.zh` + `.en`（约 2473 万句对）
 
-#### 1.2 采样训练集和测试集
+#### 1.2 采样训练集与验证集
 
-从全量数据中随机采样 100 万训练句对 + 10 万测试句对：
+从全量语料随机采样 100 万训练句对 + 10 万验证句对，输出 `data/wmt_processed/train.zh`/`.en` 与 `valid.zh`/`.en`：
 
 ```bash
-python -c "
-from tools.preprocess_pipeline import step2_sample_data
+python -c "from tools.preprocess_pipeline import step2_sample_data
 step2_sample_data('data/wmt_processed/wmt_zh_en_training_corpus.zh',
-                  'data/wmt_processed/wmt_zh_en_training_corpus.en',
-                  train_num=1000000, valid_num=100000)
-"
+                  'data/wmt_processed/wmt_zh_en_training_corpus.en')"
 ```
 
-输出：`data/wmt_processed/train.zh`/`.en`（100 万）+ `data/wmt_processed/valid.zh`/`.en`（10 万）
+采样数量可通过 `train_num=`/`valid_num=` 参数调整。
 
 #### 1.3 训练 BPE 分词器
 
-在 100 万训练集上训练中英文统一 BPE 分词器（32K 词表）：
+在训练集上训练中英文统一 BPE 分词器，输出 `checkpoints/bpe_unified.model` + `.vocab`：
 
 ```bash
-python -c "
-from tools.preprocess_pipeline import step3_train_tokenizer
+python -c "from tools.preprocess_pipeline import step3_train_tokenizer
 step3_train_tokenizer('data/wmt_processed/train.zh',
-                      'data/wmt_processed/train.en',
-                      vocab_size=32000, output_dir='./checkpoints')
-"
+                      'data/wmt_processed/train.en')"
 ```
 
-输出：`checkpoints/bpe_unified.model` + `.vocab`
+词表大小默认 32K，可通过 `vocab_size=` 参数调整。
 
-也可一键执行上述三步：
+以上三步也可一键执行（已存在的产物自动跳过）：
 
 ```bash
 python tools/preprocess_pipeline.py
@@ -104,15 +96,8 @@ python train/train_llm.py \
   --d_ff 1536
 ```
 
-训练过程（4070 Ti 实测）：
-- 训练速度：约 28 it/s，单 epoch 约 18 分钟
-
-- 总耗时：11 epoch 约 3 小时
-
-- Loss 收敛：train_loss=2.64，val_loss=2.70
-
-- 最佳模型自动保存至 `checkpoints/best_model.pt`
-
+训练过程（12GB 单卡实测）：约 28 it/s、单 epoch 约 18 分钟，11 epoch 总耗时约 3 小时；
+train_loss 2.64 → val_loss 2.70；最佳模型自动保存至 `checkpoints/best_model.pt`。
 
 #### 图1 Train Loss
 
@@ -122,17 +107,17 @@ python train/train_llm.py \
 
 ![](./images/Train_Learning_Rate.jpg)
 
-#### 图3 Val Train Loss(epochs)
+#### 图3 验证集 Loss（逐 epoch）
 
 ![](./images/Eval_train_loss.jpg)
-
-
 
 多卡训练：
 
 ```bash
 torchrun --nproc_per_node=3 train/train_llm.py
 ```
+
+TensorBoard 实时曲线：`tensorboard --logdir checkpoints/runs`（浏览器打开 http://localhost:6006）
 
 ### 3. 评估
 
@@ -176,8 +161,6 @@ python inference/infer_quantized.py
 
 ![](./images/zh_en.jpg)
 
- 
-
 ### 5. FP16 量化导出
 
 训练完成后，将 FP32 模型导出为 FP16 半精度，体积缩小 6 倍，推理速度更快。
@@ -191,11 +174,7 @@ python inference/quantize.py
 - 输出：`checkpoints/model_fp16.pt`（FP16, 102 MB）
 - 自动验证 FP16 与 FP32 输出一致性
 
-FP16 模型推理：
-```bash
-python inference/infer_quantized.py                     # 交互式
-python inference/infer_quantized.py --input "这是一个简单的翻译模型。"   # 单句
-```
+FP16 模型的交互式/单句推理用法与 FP32 相同（见上节推理命令）。
 
 ## 当前最佳结果
 
@@ -203,20 +182,11 @@ python inference/infer_quantized.py --input "这是一个简单的翻译模型�
 |------|-----|------|
 | val_loss | 2.70 | epoch 11 |
 | zh→en BLEU | 36.87 | 1000 样本，greedy decode |
-| 总训练时间 | ~3 小时 | 11 epoch，4070Ti 单卡 |
+| 总训练时间 | ~3 小时 | 11 epoch，12GB 单卡 |
 | 训练数据 | 100 万句对 | 从 2473 万句对中采样 |
 | 参数量 | 53.5M | 4 层 Transformer |
 
 > **早停策略**：train-val gap 在 epoch 11 反转（train < val），此时停止训练可避免过拟合。
-
-### 训练曲线
-
-使用 TensorBoard 查看逐 epoch 的 loss 和 learning rate 曲线：
-
-```bash
-tensorboard --logdir checkpoints/runs
-# 浏览器打开 http://localhost:6006
-```
 
 ## 超参数
 
@@ -250,16 +220,14 @@ tensorboard --logdir checkpoints/runs
 |------|-----|------|
 | vocab_size | 32,000 | 中英文统一 BPE 词表 |
 | max_len | 128 | 最大序列长度 |
-| 训练数据量 | 100 万句对 | 从 2473 万句对中采样 |
-| 训练耗时 | ~3 小时 | 11 epoch，4070Ti 单卡 |
 
 ## 项目结构
 
 ```
 Transformer_zh_en2026/
-├── core/                        # 核心库（借鉴 GleamLM 包组织：配置/分词/数据/模型）
+├── core/                        # 核心库（共享代码包：配置/分词/数据/模型）
 │   ├── __init__.py              #   统一导出（含 build_model）
-│   ├── config.py                # 配置参数（含显存适配指南）
+│   ├── config.py                # 超参定义与默认值
 │   ├── tokenizer.py             # 统一 BPE 分词器
 │   ├── dataset.py               # 数据集（TranslationDataset + collate_fn）
 │   └── transformer.py           # 纯手写 Transformer 实现
@@ -295,14 +263,6 @@ Transformer_zh_en2026/
 ├── README.md
 └── requirements.txt
 ```
-
-## 显存适配
-
-| GPU | 显存 | batch_size | max_len |
-|-----|------|------------|---------|
-| RTX 4070Ti | 12GB | 64 | 128 |
-| RTX 4090 | 24GB | 64 | 200 |
-|            |      |            |         |
 
 ## 核心实现
 
@@ -355,7 +315,7 @@ CSV(6.3GB) → tools/process_wmt.py → 2473万句对
     → tools/train_tokenizer_run.py → 32K BPE 词表
 ```
 
-## 参考
+## 参考文献
 
 - Attention Is All You Need (Vaswani et al., 2017) — https://arxiv.org/abs/1706.03762
 
@@ -365,6 +325,3 @@ CSV(6.3GB) → tools/process_wmt.py → 2473万句对
 
 本项目采用 MIT 许可证（详见项目根目录 LICENSE 文件）。
 项目允许自由使用、修改、商用与分发，使用过程中请保留 LICENSE 文件及原始版权信息。
-
-本项目仅作为 NLP 入门技术演示与实训案例，作者不提供一对一部署、调试及定制开发服务。
-请尊重原创、维护开源生态，请勿将本源码包装为高价课程或独家资源进行倒卖。
