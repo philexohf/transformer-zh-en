@@ -14,7 +14,7 @@
 import pytest
 import torch
 
-from dataset import TranslationDataset, collate_fn
+from core.dataset import TranslationDataset, collate_fn
 
 ZH_LINES = [
     "你好世界",

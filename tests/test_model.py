@@ -12,7 +12,7 @@
 import pytest
 import torch
 
-from models.transformer import Transformer
+from core.models.transformer import Transformer
 
 # 小尺寸配置，保证 CPU 上毫秒级完成
 VOCAB = 2000

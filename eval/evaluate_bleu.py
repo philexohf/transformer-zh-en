@@ -2,7 +2,7 @@
 BLEU 评估脚本
 
 计算翻译质量（标准 BLEU 公式）。
-用法: python evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt
+用法: python eval/evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt
 """
 
 import os
@@ -13,10 +13,10 @@ import argparse
 from tqdm import tqdm
 import sacrebleu
 
-from config import get_args
-from models.transformer import Transformer
-from tokenizer import build_tokenizer
-from dataset import TranslationDataset, collate_fn
+from core.config import get_args
+from core.models.transformer import Transformer
+from core.tokenizer import build_tokenizer
+from core.dataset import TranslationDataset, collate_fn
 from torch.utils.data import DataLoader
 
 
@@ -37,7 +37,7 @@ def load_checkpoint(checkpoint_path, device, vocab_size):
     tokenizer = checkpoint['tokenizer']
     args = checkpoint.get('args', None)
     if args is None:
-        from config import Config
+        from core.config import Config
         args = Config()
     
     # 从 checkpoint 路径推导 BPE 目录

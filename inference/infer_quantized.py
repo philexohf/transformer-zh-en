@@ -2,8 +2,8 @@
 FP16 半精度模型推理脚本
 
 用法:
-  python infer_quantized.py                    # 交互式
-  python infer_quantized.py --input "你好世界"  # 单句翻译
+  python inference/infer_quantized.py                    # 交互式
+  python inference/infer_quantized.py --input "你好世界"  # 单句翻译
 
 FP16: GPU 推理，速度最快，精度几乎无损，体积仅 102MB
 """
@@ -12,8 +12,8 @@ import torch
 import os
 import argparse
 
-from models.transformer import Transformer
-from tokenizer import UnifiedBPETokenizer
+from core.models.transformer import Transformer
+from core.tokenizer import UnifiedBPETokenizer
 
 
 def build_model(vocab_size, config):

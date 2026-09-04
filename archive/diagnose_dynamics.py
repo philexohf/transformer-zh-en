@@ -8,10 +8,10 @@ from torch.utils.data import DataLoader
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, ROOT)
 
-from tokenizer import UnifiedBPETokenizer
-from models.transformer import Transformer
-from dataset import TranslationDataset, collate_fn
-from train_2017 import get_lr
+from core.tokenizer import UnifiedBPETokenizer
+from core.models.transformer import Transformer
+from core.dataset import TranslationDataset, collate_fn
+from train.train_2017 import get_lr
 
 
 def load_checkpoint(path, device):

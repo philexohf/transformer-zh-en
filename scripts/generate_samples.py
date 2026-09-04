@@ -3,9 +3,9 @@ import argparse
 import torch
 import sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from tokenizer import UnifiedBPETokenizer
-from models.transformer import Transformer
-from dataset import TranslationDataset, collate_fn
+from core.tokenizer import UnifiedBPETokenizer
+from core.models.transformer import Transformer
+from core.dataset import TranslationDataset, collate_fn
 from torch.utils.data import DataLoader
 
 
@@ -28,7 +28,7 @@ def main():
     checkpoint = torch.load(args.checkpoint, map_location=device)
     model_args = checkpoint.get('args', None)
     if model_args is None:
-        from config import Config
+        from core.config import Config
         model_args = Config()
 
     vocab_size = tokenizer.get_vocab_size()

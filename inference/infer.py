@@ -8,9 +8,9 @@ import torch
 import os
 import argparse
 import sentencepiece as spm
-from config import Config
-from models.transformer import Transformer
-from tokenizer import UnifiedBPETokenizer
+from core.config import Config
+from core.models.transformer import Transformer
+from core.tokenizer import UnifiedBPETokenizer
 
 
 def load_checkpoint(checkpoint_path, device):

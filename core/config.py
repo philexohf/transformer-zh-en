@@ -20,7 +20,7 @@ import os
 def get_args():
     """
     获取命令行参数
-    可以通过 python train_llm.py --d_model 256 等方式覆盖默认值
+    可以通过 python train/train_llm.py --d_model 256 等方式覆盖默认值
     """
     parser = argparse.ArgumentParser(description='Transformer机器翻译训练配置')
     

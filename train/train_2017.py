@@ -1,10 +1,10 @@
 """
 Transformer 训练脚本（论文原版实现）
 
-注意：此脚本保留用于参考，推荐使用 train_llm.py 进行训练。
-train_llm.py 提供了更好的性能：AMP混合精度 + CosineLR学习率调度 + AdamW优化器
+注意：此脚本保留用于参考，推荐使用 train/train_llm.py 进行训练。
+train/train_llm.py 提供了更好的性能：AMP混合精度 + CosineLR学习率调度 + AdamW优化器
 
-用法: python train_2017.py
+用法: python train/train_2017.py
 """
 
 import torch
@@ -23,10 +23,10 @@ import random
 import numpy as np
 from tqdm import tqdm
 
-from config import get_args
-from models.transformer import Transformer
-from tokenizer import build_tokenizer
-from dataset import TranslationDataset, collate_fn
+from core.config import get_args
+from core.models.transformer import Transformer
+from core.tokenizer import build_tokenizer
+from core.dataset import TranslationDataset, collate_fn
 
 
 def build_model(vocab_size, config):

@@ -1,7 +1,7 @@
 """
 数据预处理流程脚本
 
-用法: python preprocess_pipeline.py
+用法: python tools/preprocess_pipeline.py
 """
 
 import os
@@ -86,8 +86,8 @@ def step3_train_tokenizer(zh_file, en_file, vocab_size=32000, output_dir="./chec
     """
     步骤3: 训练BPE分词器
     
-    调用: python train_tokenizer.py
-    或直接使用 tokenizer.py 中的 build_tokenizer
+    调用: python tools/train_tokenizer.py
+    或直接使用 core.tokenizer 中的 build_tokenizer
     """
     print("="*60)
     print("步骤3: 训练BPE分词器")

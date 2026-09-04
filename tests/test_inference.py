@@ -32,7 +32,7 @@ def detect_lang(text):
 @pytest.fixture(scope="module")
 def infer_env(checkpoint_path):
     """加载 checkpoint + 分词器 + 模型（CPU/GPU 自适应）"""
-    from models.transformer import Transformer
+    from core.models.transformer import Transformer
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

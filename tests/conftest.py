@@ -21,7 +21,7 @@ if ROOT not in sys.path:
 @pytest.fixture(scope="session")
 def tokenizer():
     """加载统一 BPE 分词器。模型文件缺失时跳过相关测试。"""
-    from tokenizer import UnifiedBPETokenizer
+    from core.tokenizer import UnifiedBPETokenizer
 
     bpe_prefix = os.path.join(ROOT, "checkpoints", "bpe_unified")
     tok = UnifiedBPETokenizer(bpe_prefix)

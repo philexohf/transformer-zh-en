@@ -1,7 +1,7 @@
 """
 FP16 半精度模型导出脚本
 
-用法: python quantize.py
+用法: python inference/quantize.py
 
 FP16 导出可使模型体积从 613MB 降至 102MB，精度几乎无损。
 INT8 量化不适用（Embedding 占参数 46%，量化收益低）。
@@ -11,9 +11,9 @@ import torch
 import os
 import sys
 
-from models.transformer import Transformer
+from core.models.transformer import Transformer
 import sentencepiece as spm
-from tokenizer import UnifiedBPETokenizer
+from core.tokenizer import UnifiedBPETokenizer
 
 
 def get_config_from_checkpoint(checkpoint):

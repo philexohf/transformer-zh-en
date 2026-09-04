@@ -60,7 +60,7 @@ python tools/process_wmt.py \
 
 ```bash
 python -c "
-from preprocess_pipeline import step2_sample_data
+from tools.preprocess_pipeline import step2_sample_data
 step2_sample_data('data/wmt_processed/wmt_zh_en_training_corpus.zh',
                   'data/wmt_processed/wmt_zh_en_training_corpus.en',
                   train_num=1000000, valid_num=100000)
@@ -75,7 +75,7 @@ step2_sample_data('data/wmt_processed/wmt_zh_en_training_corpus.zh',
 
 ```bash
 python -c "
-from preprocess_pipeline import step3_train_tokenizer
+from tools.preprocess_pipeline import step3_train_tokenizer
 step3_train_tokenizer('data/wmt_processed/train.zh',
                       'data/wmt_processed/train.en',
                       vocab_size=32000, output_dir='./checkpoints')
@@ -87,7 +87,7 @@ step3_train_tokenizer('data/wmt_processed/train.zh',
 也可一键执行上述三步：
 
 ```bash
-python preprocess_pipeline.py
+python tools/preprocess_pipeline.py
 ```
 
 ### 2. 训练
@@ -96,7 +96,7 @@ python preprocess_pipeline.py
 
 ```bash
 # 推荐配置：4 层轻量模型，~3 小时获得可用翻译
-python train_llm.py \
+python train/train_llm.py \
   --data_dir data/wmt_processed \
   --epochs 11 \
   --batch_size 32 \
@@ -135,17 +135,17 @@ python train_llm.py \
 多卡训练：
 
 ```bash
-torchrun --nproc_per_node=3 train_llm.py
+torchrun --nproc_per_node=3 train/train_llm.py
 ```
 
 ### 3. 评估
 
 ```bash
 # 全量评估
-python evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt
+python eval/evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt
 
 # 少量样本快速评估
-python evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt --max_samples 100
+python eval/evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt --max_samples 100
 ```
 
 | BLEU 分数 | 质量说明 |
@@ -160,20 +160,20 @@ python evaluate_bleu.py --checkpoint ./checkpoints/best_model.pt --max_samples 1
 
 提供两套推理方案：
 
-- **`infer.py`（FP32）** — 完整精度，支持 Beam Search
-- **`infer_quantized.py`（FP16）** — 半精度 GPU 推理，速度更快，体积仅 102MB
+- **`inference/infer.py`（FP32）** — 完整精度，支持 Beam Search
+- **`inference/infer_quantized.py`（FP16）** — 半精度 GPU 推理，速度更快，体积仅 102MB
 
 ```bash
 # FP32 推理（支持 Beam Search）
-python infer.py --input "这是一个简单的翻译模型。"
-python infer.py --beam_size 5
+python inference/infer.py --input "这是一个简单的翻译模型。"
+python inference/infer.py --beam_size 5
 
 # 交互式推理
-python infer.py
+python inference/infer.py
 
 # FP16 推理（需先导出，见下一节）
-python infer_quantized.py --input "这是一个简单的翻译模型。"
-python infer_quantized.py
+python inference/infer_quantized.py --input "这是一个简单的翻译模型。"
+python inference/infer_quantized.py
 ```
 
 #### 图4 推理结果展示
@@ -187,7 +187,7 @@ python infer_quantized.py
 训练完成后，将 FP32 模型导出为 FP16 半精度，体积缩小 6 倍，推理速度更快。
 
 ```bash
-python quantize.py
+python inference/quantize.py
 ```
 
 导出结果：
@@ -197,8 +197,8 @@ python quantize.py
 
 FP16 模型推理：
 ```bash
-python infer_quantized.py                     # 交互式
-python infer_quantized.py --input "这是一个简单的翻译模型。"   # 单句
+python inference/infer_quantized.py                     # 交互式
+python inference/infer_quantized.py --input "这是一个简单的翻译模型。"   # 单句
 ```
 
 ## 当前最佳结果
@@ -261,55 +261,47 @@ tensorboard --logdir checkpoints/runs
 
 ```
 Transformer_zh_en2026/
-├── LICENSE                   # MIT 许可证
-├── preprocess_pipeline.py    # 数据预处理流水线
-├── train_llm.py              # 训练脚本（AMP + CosineLR + AdamW）【推荐使用】
-├── train_2017.py             # 论文原版训练脚本（保留参考）
-├── evaluate_bleu.py          # BLEU 评估脚本
-├── infer.py                  # 推理脚本（Greedy / Beam Search）
-├── quantize.py               # FP16 模型导出脚本
-├── infer_quantized.py        # FP16 模型推理脚本
-├── config.py                 # 配置参数（含显存适配指南）
-├── tokenizer.py              # 统一 BPE 分词器
-├── dataset.py                # 数据集加载（TranslationDataset + collate_fn）
-├── requirements.txt          # Python 依赖
+├── core/                        # 核心库（借鉴 GleamLM 包组织：配置/分词/数据/模型）
+│   ├── __init__.py              #   统一导出（含旧 checkpoint 的 pickle 兼容）
+│   ├── config.py                # 配置参数（含显存适配指南）
+│   ├── tokenizer.py             # 统一 BPE 分词器
+│   ├── dataset.py               # 数据集（TranslationDataset + collate_fn）
+│   └── models/
+│       ├── __init__.py
+│       └── transformer.py       # 纯手写 Transformer 实现
 │
-├── models/
-│   ├── __init__.py
-│   └── transformer.py        # 纯手写 Transformer 实现
+├── train/                       # 训练轨
+│   ├── train_llm.py             # 训练脚本（AMP + CosineLR + AdamW）【推荐使用】
+│   └── train_2017.py            # 论文原版训练脚本（保留参考）
 │
-├── tools/
-│   ├── train_tokenizer.py    # 训练 SentencePiece BPE 分词器
-│   ├── process_wmt.py        # WMT 原始 CSV → 清洗文本
-│   ├── process_subset.py     # 子集数据预处理（去中文空格等）
-│   └── tokenize_text.py      # 分词演示与交互工具
+├── inference/                   # 推理与导出轨
+│   ├── infer.py                 # FP32 推理（Greedy / Beam Search）
+│   ├── infer_quantized.py       # FP16 半精度推理
+│   └── quantize.py              # FP16 模型导出
 │
-├── scripts/
-│   ├── generate_samples.py   # 贪心解码生成
-│   ├── generate_beam.py      # Beam Search 生成
-│   ├── generate_sampling.py  # 采样生成（temperature / top-k）
-│   └── train_tokenizer_run.py# 分词器训练入口
+├── eval/                        # 评测轨
+│   └── evaluate_bleu.py         # BLEU 评估脚本
 │
-├── archive/                  # 历史训练诊断脚本（6 个，已退役仅供回溯）
+├── tools/                       # 数据工具
+│   ├── preprocess_pipeline.py   # 数据预处理流水线
+│   ├── train_tokenizer.py       # 训练 SentencePiece BPE 分词器
+│   ├── process_wmt.py           # WMT 原始 CSV → 清洗文本
+│   ├── process_subset.py        # 子集数据预处理（去中文空格等）
+│   └── tokenize_text.py         # 分词演示与交互工具
 │
-├── checkpoints/
-│   ├── best_model.pt         # 最佳模型检查点（FP32，训练后生成）
-│   ├── model_fp16.pt         # FP16 半精度模型（训练后生成）
-│   ├── bpe_unified.model     # BPE 分词器模型
-│   └── bpe_unified.vocab     # BPE 词表
+├── scripts/                     # 生成演示（贪心 / Beam / Sampling）
+│   ├── generate_samples.py
+│   ├── generate_beam.py
+│   ├── generate_sampling.py
+│   └── train_tokenizer_run.py   # 分词器训练入口
 │
-├── tests/                    # pytest 单元测试（运行: python -m pytest tests -v）
-│   ├── conftest.py           # sys.path 注入 + tokenizer/checkpoint fixture
-│   ├── test_model.py         # 模型前向 / 掩码语义
-│   ├── test_tokenizer.py     # BPE 往返与归一化行为
-│   ├── test_data.py          # 数据集与 collate（微型语料）
-│   └── test_inference.py     # 翻译冒烟（需 checkpoint，缺失自动跳过）
-│
-├── data/
-│   ├── wmt_processed/        # 处理后的训练数据（需下载，不入仓库）
-│   └── debug_small/          # 小规模调试数据（2000 条训练 + 200 条验证）
-│
+├── archive/                     # 历史训练诊断脚本（已退役，仅供回溯）
+├── tests/                       # pytest 单元测试（运行: python -m pytest tests -v）
+├── checkpoints/                 # 模型权重与 BPE 产物（权重不入仓库）
+├── data/                        # 语料（wmt_processed 不入仓库；debug_small 调试数据）
+├── images/                      # 训练曲线与推理效果图
 ├── README.md
+└── requirements.txt
 ```
 
 ## 显存适配
@@ -322,7 +314,7 @@ Transformer_zh_en2026/
 
 ## 核心实现
 
-### 1. 模型结构（transformer.py）
+### 1. 模型结构（core/models/transformer.py）
 
 | 组件 | 实现要点 |
 |------|---------|
@@ -335,7 +327,7 @@ Transformer_zh_en2026/
 | DecoderLayer | Masked Self-Attn → Cross-Attn → FFN，三层 AddNorm |
 | Transformer | 独立 src/tgt embed，Xavier 初始化，`encode/decode/forward` 三入口 |
 
-### 2. 分词器（tokenizer.py）
+### 2. 分词器（core/tokenizer.py）
 
 - 中英文共享 32K BPE 词表（SentencePiece）
 - 语言标记 `▁zh`/`▁en` 让 BPE 学习语言特定的子词分布
@@ -346,29 +338,29 @@ Transformer_zh_en2026/
 
 | 方案 | 精度 | 优化器 | LR 调度 | 适用场景 |
 |------|------|--------|---------|---------|
-| `train_llm.py`（推荐） | AMP 混合精度 | AdamW（wd=0.01） | CosineAnnealing + Warmup | 消费级 GPU 优化 |
-| `train_2017.py`（参考） | FP32 | Adam | `d^-0.5 · min(step^-0.5, step · warmup^-1.5)` | 论文复现 |
+| `train/train_llm.py`（推荐） | AMP 混合精度 | AdamW（wd=0.01） | CosineAnnealing + Warmup | 消费级 GPU 优化 |
+| `train/train_2017.py`（参考） | FP32 | Adam | `d^-0.5 · min(step^-0.5, step · warmup^-1.5)` | 论文复现 |
 
 ### 4. 推理与解码
 
 | 策略 | 文件 | 算法要点 |
 |------|------|---------|
-| Greedy | `infer.py` / `infer_quantized.py` | 每步 `argmax`，到 `eos` 停止 |
-| Beam Search | `infer.py` / `scripts/generate_beam.py` | 宽度 5 + length penalty α=0.6 + n-gram 去重 |
+| Greedy | `inference/infer.py` / `inference/infer_quantized.py` | 每步 `argmax`，到 `eos` 停止 |
+| Beam Search | `inference/infer.py` / `scripts/generate_beam.py` | 宽度 5 + length penalty α=0.6 + n-gram 去重 |
 | Sampling | `scripts/generate_sampling.py` | Temperature / top-k / n-gram 回退到 argmax |
 
-### 5. 量化导出（quantize.py）
+### 5. 量化导出（inference/quantize.py）
 
 - FP32（613 MB）→ FP16（102 MB），精度无损验证
 - 自描述导出格式：`{'model_state_dict': ..., 'model_config': {...}}`
-- 导出后可用 `infer_quantized.py` 独立推理，无需 `best_model.pt`
+- 导出后可用 `inference/infer_quantized.py` 独立推理，无需 `best_model.pt`
 
 ### 6. 数据流水线
 
 ```
-CSV(6.3GB) → process_wmt.py → 2473万句对
+CSV(6.3GB) → tools/process_wmt.py → 2473万句对
   → sample → 100万 train + 10万 valid
-    → train_tokenizer → 32K BPE 词表
+    → tools/train_tokenizer.py → 32K BPE 词表
 ```
 
 ## 参考
