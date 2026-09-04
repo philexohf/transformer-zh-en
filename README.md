@@ -288,8 +288,9 @@ Transformer_zh_en2026/
 │   ├── generate_samples.py   # 贪心解码生成
 │   ├── generate_beam.py      # Beam Search 生成
 │   ├── generate_sampling.py  # 采样生成（temperature / top-k）
-│   ├── train_tokenizer_run.py# 分词器训练入口
-│   └── archive/              # 历史训练诊断脚本（已退役，仅供回溯）
+│   └── train_tokenizer_run.py# 分词器训练入口
+│
+├── archive/                  # 历史训练诊断脚本（6 个，已退役仅供回溯）
 │
 ├── checkpoints/
 │   ├── best_model.pt         # 最佳模型检查点（FP32，训练后生成）
