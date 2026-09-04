@@ -201,8 +201,6 @@ python infer_quantized.py                     # 交互式
 python infer_quantized.py --input "这是一个简单的翻译模型。"   # 单句
 ```
 
-FP16 模型可复制到 `translation_infer/checkpoints/` 目录单独分发部署。
-
 ## 当前最佳结果
 
 | 指标 | 值 | 说明 |
@@ -284,18 +282,14 @@ Transformer_zh_en2026/
 │   ├── train_tokenizer.py    # 训练 SentencePiece BPE 分词器
 │   ├── process_wmt.py        # WMT 原始 CSV → 清洗文本
 │   ├── process_subset.py     # 子集数据预处理（去中文空格等）
-│   ├── tokenize_text.py      # 分词演示与交互工具
-│   ├── test_translate.py     # 翻译功能测试
-│   └── check_bpe.py          # BPE 模型信息查看
+│   └── tokenize_text.py      # 分词演示与交互工具
 │
 ├── scripts/
 │   ├── generate_samples.py   # 贪心解码生成
 │   ├── generate_beam.py      # Beam Search 生成
 │   ├── generate_sampling.py  # 采样生成（temperature / top-k）
-│   ├── diagnose_dynamics.py  # 训练动态诊断（lr、loss、grad）
-│   ├── analyze_predictions.py# 预测结果分析
 │   ├── train_tokenizer_run.py# 分词器训练入口
-│   └── ...
+│   └── archive/              # 历史训练诊断脚本（已退役，仅供回溯）
 │
 ├── checkpoints/
 │   ├── best_model.pt         # 最佳模型检查点（FP32，训练后生成）
@@ -303,17 +297,12 @@ Transformer_zh_en2026/
 │   ├── bpe_unified.model     # BPE 分词器模型
 │   └── bpe_unified.vocab     # BPE 词表
 │
-├── translation_infer/        # 独立推理包（可直接发给他人使用）
-│   ├── README_INFER.md
-│   ├── infer_quantized.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   └── transformer.py
-│   └── checkpoints/
-│       ├── model_fp16.pt         # FP16 半精度模型（需从根目录复制）
-│       ├── bpe_unified.model
-│       ├── bpe_unified.vocab
-│       └── tokenizer.py
+├── tests/                    # pytest 单元测试（运行: python -m pytest tests -v）
+│   ├── conftest.py           # sys.path 注入 + tokenizer/checkpoint fixture
+│   ├── test_model.py         # 模型前向 / 掩码语义
+│   ├── test_tokenizer.py     # BPE 往返与归一化行为
+│   ├── test_data.py          # 数据集与 collate（微型语料）
+│   └── test_inference.py     # 翻译冒烟（需 checkpoint，缺失自动跳过）
 │
 ├── data/
 │   ├── wmt_processed/        # 处理后的训练数据（需下载，不入仓库）

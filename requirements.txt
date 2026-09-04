@@ -5,3 +5,4 @@ tqdm>=4.62.0
 numpy>=1.21.0
 tensorboard>=2.10.0
 sacrebleu>=2.0.0
+pytest>=7.0.0  # tests/ 单元测试（运行: python -m pytest tests -v）

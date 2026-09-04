@@ -265,45 +265,4 @@ class Transformer(nn.Module):
         output = self.linear(decoder_output)
         return output
 
-
-# --- 快速验证
-if __name__ == "__main__":
-    print("构建 Transformer Base 模型（~65M 参数）...")
-    model = Transformer(
-        src_vocab_size=32000,
-        tgt_vocab_size=32000,
-        d_model=512,
-        num_heads=8,
-        num_encoder_layers=6,
-        num_decoder_layers=6,
-        d_ffn=2048,
-        dropout=0.1,
-        max_len=200,
-        pad_idx=0
-    )
-
-    # 验证 forward（训练模式）
-    print("\n[1] forward()")
-    src = torch.randint(0, 32000, (32, 50))
-    tgt = torch.randint(0, 32000, (32, 40))
-    output = model(src, tgt)
-    print(f"    输入: src {src.shape}, tgt {tgt.shape}")
-    print(f"    输出: {output.shape}  ← 应为 [32, 40, 32000]")
-
-    # 验证 encode + decode（推理逐步生成）
-    print("\n[2] encode() + decode()")
-    src = torch.randint(0, 32000, (4, 30))
-    enc, src_mask = model.encode(src)
-    print(f"    encode → enc {enc.shape}, mask {src_mask.shape}")
-
-    tgt = torch.tensor([[2], [2], [2], [2]])
-    for step in range(5):
-        dec = model.decode(tgt, enc, src_mask)
-        next_token = dec[:, -1:].argmax(dim=-1)
-        tgt = torch.cat([tgt, next_token], dim=1)
-    print(f"    decode 5 steps → tgt {tgt.shape}  ← 应为 [4, 6]")
-
-    # 参数统计
-    total_params = sum(p.numel() for p in model.parameters())
-    print(f"\n总参数量: {total_params / 1e6:.1f}M")
-    print("所有测试通过")
+# 自检代码已迁移至 tests/test_model.py（运行: python -m pytest tests -v）
