@@ -89,6 +89,25 @@ def test_tgt_mask_is_causal_and_padding_aware(model):
     assert not mask[1, 0, :, 2:].any()
 
 
+def test_causal_mask_blocks_future_leak(model):
+    """因果性端到端验证：篡改 tgt 第 k 列 token，位置 <k 的输出必须逐位不变"""
+    model.eval()
+    src = torch.tensor([[5, 6, 7, 8, 0, 0],
+                        [1, 2, 0, 0, 0, 0]])
+    tgt = torch.tensor([[2, 10, 11, 12, 3, 0],
+                        [2, 20, 21, 3, 0, 0]])  # bos=2, eos=3, pad=0
+    enc, src_mask = model.encode(src)
+    with torch.no_grad():
+        ref = model.decode(tgt, enc, src_mask)
+        tgt_corrupt = tgt.clone()
+        tgt_corrupt[0, 2] = 30  # 篡改第 0 行第 2 列（未来 token）
+        out = model.decode(tgt_corrupt, enc, src_mask)
+    # 输出位置 0/1 只依赖输入位置 0/1，必须与篡改前精确一致
+    assert torch.equal(ref[:, :2, :], out[:, :2, :])
+    # 行间独立：篡改 row0 不影响 row1
+    assert torch.equal(ref[1], out[1])
+
+
 def test_parameter_count_within_reference(model):
     """与文档标注一致：Base 配置 ~65M，小配置应在合理区间"""
     total = sum(p.numel() for p in model.parameters())
