@@ -151,7 +151,7 @@ class UnifiedBPETokenizer:
         return ids
     
     def decode(self, ids, lang="en"):
-        """ID 序列还原为文本，过滤特殊 token，中文输出去空格。"""
+        """ID 序列还原为文本，过滤特殊 token，中文输出去空格、英文句首大写。"""
         pieces = [self.sp.id_to_piece(i) for i in ids]
 
         # 过滤特殊 token 和语言标记
@@ -164,6 +164,16 @@ class UnifiedBPETokenizer:
         # 简单策略：如果文本包含汉字，则移除空格
         if any('\u4e00' <= ch <= '\u9fff' for ch in text):
             text = text.replace(' ', '')
+
+        # 英文句首大写：训练语料经 encode 统一小写，展示时恢复句首字母
+        # （仅跳过引号类前缀：直/弯引号；数字或其他符号开头不处理；
+        #  eval 的 pred/ref 同时受益，口径一致）
+        if lang == "en" and text:
+            idx = 0
+            while idx < len(text) and text[idx] in "\"'`\u2018\u2019\u201c\u201d":
+                idx += 1
+            if idx < len(text) and text[idx].islower():
+                text = text[:idx] + text[idx].upper() + text[idx + 1:]
 
         return text
     
