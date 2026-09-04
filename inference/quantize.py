@@ -11,7 +11,7 @@ import torch
 import os
 import sys
 
-from core.models.transformer import Transformer
+from core.transformer import Transformer
 import sentencepiece as spm
 from core.tokenizer import UnifiedBPETokenizer
 

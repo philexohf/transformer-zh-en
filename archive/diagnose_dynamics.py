@@ -9,7 +9,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.insert(0, ROOT)
 
 from core.tokenizer import UnifiedBPETokenizer
-from core.models.transformer import Transformer
+from core.transformer import Transformer
 from core.dataset import TranslationDataset, collate_fn
 from train.train_2017 import get_lr
 

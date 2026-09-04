@@ -14,7 +14,7 @@ from tqdm import tqdm
 import sacrebleu
 
 from core.config import get_args
-from core.models.transformer import Transformer
+from core.transformer import Transformer
 from core.tokenizer import build_tokenizer
 from core.dataset import TranslationDataset, collate_fn
 from torch.utils.data import DataLoader

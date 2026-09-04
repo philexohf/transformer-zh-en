@@ -262,13 +262,11 @@ tensorboard --logdir checkpoints/runs
 ```
 Transformer_zh_en2026/
 ├── core/                        # 核心库（借鉴 GleamLM 包组织：配置/分词/数据/模型）
-│   ├── __init__.py              #   统一导出（含旧 checkpoint 的 pickle 兼容）
+│   ├── __init__.py              #   统一导出（含 build_model 与旧 checkpoint 的 pickle 兼容）
 │   ├── config.py                # 配置参数（含显存适配指南）
 │   ├── tokenizer.py             # 统一 BPE 分词器
 │   ├── dataset.py               # 数据集（TranslationDataset + collate_fn）
-│   └── models/
-│       ├── __init__.py
-│       └── transformer.py       # 纯手写 Transformer 实现
+│   └── transformer.py           # 纯手写 Transformer 实现
 │
 ├── train/                       # 训练轨
 │   ├── train_llm.py             # 训练脚本（AMP + CosineLR + AdamW）【推荐使用】
@@ -314,7 +312,7 @@ Transformer_zh_en2026/
 
 ## 核心实现
 
-### 1. 模型结构（core/models/transformer.py）
+### 1. 模型结构（core/transformer.py）
 
 | 组件 | 实现要点 |
 |------|---------|

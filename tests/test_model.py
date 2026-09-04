@@ -1,7 +1,7 @@
 """
 模型单元测试
 
-由 models/transformer.py 末尾的 __main__ 自检块迁移而来：
+由 transformer.py 末尾的 __main__ 自检块迁移而来：
 - forward 输出形状
 - encode + decode 自回归生成形状
 - 掩码形状
@@ -12,7 +12,7 @@
 import pytest
 import torch
 
-from core.models.transformer import Transformer
+from core.transformer import Transformer
 
 # 小尺寸配置，保证 CPU 上毫秒级完成
 VOCAB = 2000

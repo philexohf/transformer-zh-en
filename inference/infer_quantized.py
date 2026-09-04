@@ -12,7 +12,7 @@ import torch
 import os
 import argparse
 
-from core.models.transformer import Transformer
+from core.transformer import Transformer
 from core.tokenizer import UnifiedBPETokenizer
 
 

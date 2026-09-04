@@ -9,7 +9,7 @@ import os
 import argparse
 import sentencepiece as spm
 from core.config import Config
-from core.models.transformer import Transformer
+from core.transformer import Transformer
 from core.tokenizer import UnifiedBPETokenizer
 
 
