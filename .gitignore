@@ -31,6 +31,9 @@ checkpoints/*.backup
 # GPG 私钥备份（切勿提交）
 .gpg-backup/
 
+# 文档（本地笔记，不入库）
+docs/
+
 # IDE / OS
 .DS_Store
 Thumbs.db
